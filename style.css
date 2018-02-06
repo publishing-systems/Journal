@@ -17,7 +17,21 @@
 
 body
 {
-    font-family: sans-serif;   
+    font-family: sans-serif;
+}
+
+em
+{
+    all: unset;
+    text-decoration: blink;
+    background-color: LightGray;
+}
+
+strong
+{
+    all: unset;
+    text-decoration: overline underline;
+    font-weight: bold;
 }
 
 .post-content

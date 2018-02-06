@@ -15,13 +15,15 @@
  * along with Journal. If not, see <http://www.gnu.org/licenses/>.
  */
 
-var AJAX = (function()
+"use strict";
+
+let AJAX = (function()
 {
-    var connection = null;
+    let connection = null;
 
     function CreateConnection()
     {
-        var xmlhttp = null;
+        let xmlhttp = null;
 
         // Mozilla
         if (window.XMLHttpRequest)
@@ -37,7 +39,7 @@ var AJAX = (function()
         return xmlhttp;
     }
 
-    var object =
+    let object =
     {
         GetConnection: function()
         {

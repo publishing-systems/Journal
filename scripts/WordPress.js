@@ -15,13 +15,15 @@
  * along with Journal. If not, see <http://www.gnu.org/licenses/>.
  */
 
+"use strict";
+
 function GetPost(connection, baseURL, page, callback)
 {
     if (connection == null)
     {
         return -1;
     }
-    
+
     if (typeof page != "number")
     {
         return -1;
