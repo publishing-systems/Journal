@@ -39,3 +39,8 @@ strong
     padding: 2em;
     text-align: justify;
 }
+
+.glossary-usage
+{
+    background-color: yellow;
+}
