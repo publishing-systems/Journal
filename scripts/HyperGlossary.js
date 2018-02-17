@@ -125,7 +125,7 @@ function RenderEntry(entry)
     let stream = new CharacterStream(entry.content.rendered);
     let reader = createXMLEventReader(stream);
     reader.addToEntityReplacementDictionary("#8216", "‘");
-    reader.addToEntityReplacementDictionary("#8217", "’ ");
+    reader.addToEntityReplacementDictionary("#8217", "’");
     reader.addToEntityReplacementDictionary("#8220", "“");
     reader.addToEntityReplacementDictionary("#8221", "”");
     reader.addToEntityReplacementDictionary("#8230", "…");
@@ -167,7 +167,7 @@ function ApplyGlossary()
         {
             let term = definition.children[j];
 
-            if (term.nodeName.toLowerCase() != "dt")
+            if (term.tagName.toLowerCase() != "dt")
             {
                 j += 1;
                 continue;
@@ -180,7 +180,7 @@ function ApplyGlossary()
 
             let description = definition.children[j + 1];
 
-            if (description.nodeName.toLowerCase() != "dd")
+            if (description.tagName.toLowerCase() != "dd")
             {
                 j += 2;
                 continue;
@@ -215,7 +215,7 @@ function ReplaceText(node, glossary)
 {
     let result = new Array();
 
-    if (node.nodeType == 3)
+    if (node.nodeType == Node.TEXT_NODE)
     {
         let tokens = tokenize(node.data);
         let innerText = "";
@@ -253,8 +253,13 @@ function ReplaceText(node, glossary)
             result.push(document.createTextNode(innerText));
         }
     }
-    else
+    else if (node.nodeType == Node.ELEMENT_NODE)
     {
+        if (node.tagName.toLowerCase() == "a")
+        {
+            return result;
+        }
+
         for (let i = 0; i < node.childNodes.length; i++)
         {
             var nodes = ReplaceText(node.childNodes[i], glossary);
@@ -299,6 +304,12 @@ function tokenize(text)
 
             tokens.push(text[i]);
         }
+    }
+
+    if (startPos >= 0)
+    {
+        tokens.push(text.substring(startPos));
+        startPos = -1;
     }
 
     return tokens;

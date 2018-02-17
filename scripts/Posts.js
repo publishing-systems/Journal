@@ -149,7 +149,7 @@ function RenderPost(post)
     let stream = new CharacterStream(post.content.rendered);
     let reader = createXMLEventReader(stream);
     reader.addToEntityReplacementDictionary("#8216", "‘");
-    reader.addToEntityReplacementDictionary("#8217", "’ ");
+    reader.addToEntityReplacementDictionary("#8217", "’");
     reader.addToEntityReplacementDictionary("#8220", "“");
     reader.addToEntityReplacementDictionary("#8221", "”");
     reader.addToEntityReplacementDictionary("#8230", "…");
