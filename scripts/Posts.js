@@ -195,9 +195,9 @@ function RenderPost(post)
 
                 // Ampersand needs to be the first, otherwise it would
                 // double-escape other entities.
-                innerHTML += "<a href=\"" + href.replace('&', "&amp;")
-                                                .replace('"', "&quot;")
-                                                .replace("<", "lt;") + "\">";
+                innerHTML += "<a href=\"" + href.replace(new RegExp('&', 'g'), "&amp;")
+                                                .replace(new RegExp('"', 'g'), "&quot;")
+                                                .replace(new RegExp('<', 'g'), "lt;") + "\">";
 
                 while (reader.hasNext() == true)
                 {
@@ -214,9 +214,9 @@ function RenderPost(post)
                     {
                         // Ampersand needs to be the first, otherwise it would
                         // double-escape other entities.
-                        innerHTML += event.getData().replace('&', "&amp;")
-                                                    .replace('<', "&lt;")
-                                                    .replace('>', "&gt;");
+                        innerHTML += event.getData().replace(new RegExp('&', 'g'), "&amp;")
+                                                    .replace(new RegExp('<', 'g'), "&lt;")
+                                                    .replace(new RegExp('>', 'g'), "&gt;");
                     }
                     else if (event instanceof EndElement)
                     {
@@ -233,9 +233,9 @@ function RenderPost(post)
         {
             // Ampersand needs to be the first, otherwise it would
             // double-escape other entities.
-            innerHTML += event.getData().replace('&', "&amp;")
-                                        .replace('<', "&lt;")
-                                        .replace('>', "&gt;");
+            innerHTML += event.getData().replace(new RegExp('&', 'g'), "&amp;")
+                                        .replace(new RegExp('<', 'g'), "&lt;")
+                                        .replace(new RegExp('>', 'g'), "&gt;");
         }
         else if (event instanceof EndElement)
         {

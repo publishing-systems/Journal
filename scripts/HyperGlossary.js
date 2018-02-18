@@ -120,7 +120,7 @@ function RenderEntry(entry)
     let descriptionText = "";
 
     // TODO: Remove workaround for https://github.com/mediaelement/mediaelement/pull/2498.
-    entry.content.rendered = entry.content.rendered.replace(new RegExp("allowfullscreen", "g"), "allowfullscreen=\"true\"");
+    entry.content.rendered = entry.content.rendered.replace(new RegExp("allowfullscreen", 'g'), "allowfullscreen=\"true\"");
 
     let stream = new CharacterStream(entry.content.rendered);
     let reader = createXMLEventReader(stream);
@@ -141,9 +141,9 @@ function RenderEntry(entry)
         {
             // Ampersand needs to be the first, otherwise it would
             // double-escape other entities.
-            descriptionText += event.getData().replace('&', "&amp;")
-                                              .replace('<', "&lt;")
-                                              .replace('>', "&gt;");
+            descriptionText += event.getData().replace(new RegExp('&', 'g'), "&amp;")
+                                              .replace(new RegExp('<', 'g'), "&lt;")
+                                              .replace(new RegExp('>', 'g'), "&gt;");
         }
     }
 
@@ -242,9 +242,9 @@ function ReplaceText(node, glossary)
             {
                 // Ampersand needs to be the first, otherwise it would
                 // double-escape other entities.
-                innerText += tokens[i].replace('&', "&amp;")
-                                      .replace('<', "&lt;")
-                                      .replace('>', "&gt;");
+                innerText += tokens[i].replace(new RegExp('&', 'g'), "&amp;")
+                                      .replace(new RegExp('<', 'g'), "&lt;")
+                                      .replace(new RegExp('>', 'g'), "&gt;");
             }
         }
 
