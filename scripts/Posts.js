@@ -156,6 +156,7 @@ function RenderPost(post)
     reader.addToEntityReplacementDictionary("nbsp", " ");
     reader.addToEntityReplacementDictionary("#8211", "–");
     reader.addToEntityReplacementDictionary("#038", "&");
+    reader.addToEntityReplacementDictionary("#8222", "„");
 
     while (reader.hasNext() == true)
     {
