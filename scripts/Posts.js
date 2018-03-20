@@ -29,7 +29,6 @@ function LoadPosts(callback)
     let page = 1;
     let site = 0;
     let urls = [ "https://doug-50.info/journal",
-                 /* TODO: This should filter for a still missing category "Hypertext"! */
                  "https://skreutzer.de" ];
 
     let LoadPost = function(data)
@@ -57,7 +56,22 @@ function LoadPosts(callback)
             return;
         }
 
-        if (data.categories.includes(12) != true)
+        // TODO: No filtering in advance yet!
+        let render = true;
+
+        if (urls[site] == "https://doug-50.info/journal" &&
+            data.categories.includes(12) == true)
+        {
+            render = false;
+        }
+
+        if (urls[site] == "https://skreutzer.de" &&
+            data.categories.includes(3) != true)
+        {
+            render = false;
+        }
+
+        if (render == true)
         {
             if (RenderPost(data) != 0)
             {
@@ -164,7 +178,7 @@ function RenderPost(post)
 
         if (event instanceof StartElement)
         {
-            let name = event.getName().getLocalPart();
+            let name = event.getName().getLocalPart().toLowerCase();
 
             if (name == "p" ||
                 name == "em" ||
@@ -182,7 +196,7 @@ function RenderPost(post)
 
                 for (let i = 0; i < href.length; i++)
                 {
-                    if (href[i].getName().getLocalPart() == "href")
+                    if (href[i].getName().getLocalPart().toLowerCase() == "href")
                     {
                         href = href[i].getValue();
                         break;
@@ -206,7 +220,7 @@ function RenderPost(post)
 
                     if (event instanceof StartElement)
                     {
-                        if (event.getName().getLocalPart() == "a")
+                        if (event.getName().getLocalPart().toLowerCase() == "a")
                         {
                             throw "Nested element 'a'.";
                         }
@@ -221,7 +235,7 @@ function RenderPost(post)
                     }
                     else if (event instanceof EndElement)
                     {
-                        if (event.getName().getLocalPart() == "a")
+                        if (event.getName().getLocalPart().toLowerCase() == "a")
                         {
                             innerHTML += "</a>";
                             break;
@@ -240,7 +254,7 @@ function RenderPost(post)
         }
         else if (event instanceof EndElement)
         {
-            let name = event.getName().getLocalPart();
+            let name = event.getName().getLocalPart().toLowerCase();
 
             if (name == "p" ||
                 name == "em" ||

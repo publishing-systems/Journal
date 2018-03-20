@@ -111,14 +111,6 @@ function RenderEntry(entry)
         container = container[0];
     }
 
-    let term = document.createElement("dt");
-    let termText = document.createTextNode(entry.title.rendered);
-    term.appendChild(termText);
-    container.appendChild(term);
-
-    let description = document.createElement("dd");
-    let descriptionText = "";
-
     // TODO: Remove workaround for https://github.com/mediaelement/mediaelement/pull/2498.
     entry.content.rendered = entry.content.rendered.replace(new RegExp("allowfullscreen", 'g'), "allowfullscreen=\"true\"");
 
@@ -134,63 +126,136 @@ function RenderEntry(entry)
     reader.addToEntityReplacementDictionary("#038", "&");
     reader.addToEntityReplacementDictionary("#8222", "„");
 
+    let glossary = "";
+
     while (reader.hasNext() == true)
     {
         let event = reader.nextEvent();
 
-        if (event instanceof Characters)
+        if (event instanceof StartElement)
         {
-            // Ampersand needs to be the first, otherwise it would
-            // double-escape other entities.
-            descriptionText += event.getData().replace(new RegExp('&', 'g'), "&amp;")
-                                              .replace(new RegExp('<', 'g'), "&lt;")
-                                              .replace(new RegExp('>', 'g'), "&gt;");
+            if (event.getName().getLocalPart().toLowerCase() == "dl")
+            {
+                // All of this parsing isn't really necessary, as the StAX
+                // reader could well recreate the elements and their text
+                // for being transferred to the .innerHTML of the target,
+                // but the handling here is done to have an object model
+                // for easier manipulation with code and demonstration
+                // purposes.
+                let parser = new XhtmlDefinitionListParser(reader);
+                glossary = parser.parse();
+                break;
+            }
+        }
+        else if (event instanceof Characters)
+        {
+            glossary += event.getData();
         }
     }
 
-    descriptionText = document.createTextNode(descriptionText);
-    description.appendChild(descriptionText);
-    container.appendChild(description);
+    if (glossary instanceof Array)
+    {
+        if (glossary.length <= 0)
+        {
+            return 0;
+        }
+
+        if (glossary[0].name.toLowerCase() != "dt")
+        {
+            throw "Definition list doesn't start with definition term.";
+        }
+
+        for (let i = 0; i < glossary.length; i++)
+        {
+            let element = document.createElement(glossary[i].name);
+            let textContent = document.createTextNode(XmlEscapeCharacters(glossary[i].text));
+            element.appendChild(textContent);
+            container.appendChild(element);
+        }
+    }
+    else if (typeof glossary === "string")
+    {
+        if (glossary.length <= 0)
+        {
+            return 0;
+        }
+
+        let term = document.createElement("dt");
+        let termText = document.createTextNode(XmlEscapeCharacters(entry.title.rendered));
+        term.appendChild(termText);
+        container.appendChild(term);
+
+        let description = document.createElement("dd");
+        let descriptionText = document.createTextNode(glossary);
+        description.appendChild(descriptionText);
+        container.appendChild(description);
+    }
 
     return 0;
 }
 
 function ApplyGlossary()
 {
-    let glossary = new Map();
+    let glossary = new Array();
     let definitions = document.getElementsByTagName("dl");
+
+    let entry = new Object();
+    entry.terms = null;
+    entry.descriptions = null;
 
     for (let i = 0; i < definitions.length; i++)
     {
         let definition = definitions[i];
 
-        for (let j = 0; j < definition.children.length; )
+        for (let j = 0; j < definition.children.length; j++)
         {
-            let term = definition.children[j];
+            let child = definition.children[j];
 
-            if (term.tagName.toLowerCase() != "dt")
+            if (child.tagName.toLowerCase() == "dt")
             {
-                j += 1;
-                continue;
-            }
+                if (entry.descriptions != null)
+                {
+                    if (entry.descriptions != null)
+                    {
+                        glossary.push(entry);
 
-            if (j + 1 >= definition.children.length)
+                        entry = new Object();
+                        entry.terms = null;
+                        entry.descriptions = null;
+                    }
+                    else
+                    {
+                        throw "Definition terms without descriptions.";
+                    }
+                }
+
+                if (entry.terms == null)
+                {
+                    entry.terms = new Array();
+                }
+
+                entry.terms.push(child.innerText.toLowerCase());
+            }
+            else if (child.tagName.toLowerCase() == "dd")
             {
-                break;
+                if (entry.terms == null)
+                {
+                    throw "Definition description without terms.";
+                }
+
+                if (entry.descriptions == null)
+                {
+                    entry.descriptions = new Array();
+                }
+
+                entry.descriptions.push(child.innerText);
             }
-
-            let description = definition.children[j + 1];
-
-            if (description.tagName.toLowerCase() != "dd")
-            {
-                j += 2;
-                continue;
-            }
-
-            glossary.set(term.innerText.toLowerCase(), description.innerText);
-
-            j += 2;
         }
+    }
+
+    if (entry.descriptions != null)
+    {
+        glossary.push(entry);
     }
 
     let posts = document.getElementsByClassName("post-content");
@@ -223,29 +288,72 @@ function ReplaceText(node, glossary)
 
         for (let i = 0; i < tokens.length; i++)
         {
-            if (glossary.has(tokens[i].toLowerCase()) == true)
+            let found = false;
+
+            for (let j = 0; j < glossary.length && found == false; j++)
             {
-                if (innerText.length > 0)
+                for (let k = 0; k < glossary[j].terms.length && found == false; k++)
                 {
-                    result.push(document.createTextNode(innerText));
-                    innerText = "";
+                    let termTokens = tokenize(glossary[j].terms[k]);
+                    let matched = true;
+
+                    for (let l = 0; l < termTokens.length; l++)
+                    {
+                        if (i + l >= tokens.length)
+                        {
+                            matched = false;
+                            break;
+                        }
+
+                        if (tokens[i + l].toLowerCase() !== termTokens[l].toLowerCase())
+                        {
+                            matched = false;
+                            break;
+                        }
+                    }
+
+                    if (matched == true)
+                    {
+                        if (innerText.length > 0)
+                        {
+                            result.push(document.createTextNode(innerText));
+                            innerText = "";
+                        }
+
+                        let span = document.createElement("span");
+                        span.setAttribute("class", "glossary-usage");
+
+                        let textContent = "";
+
+                        for (let l = 0; l < termTokens.length; l++)
+                        {
+                            textContent += tokens[i];
+                            ++i;
+                        }
+
+                        // Because the next iteration will increment it again.
+                        --i;
+
+                        let spanText = document.createTextNode(textContent);
+                        span.appendChild(spanText);
+
+                        result.push(span);
+                        found = true;
+                        break;
+                    }
                 }
 
-                let span = document.createElement("span");
-                span.setAttribute("class", "glossary-usage");
-
-                let spanText = document.createTextNode(tokens[i]);
-                span.appendChild(spanText);
-
-                result.push(span);
+                if (found == true)
+                {
+                    break;
+                }
             }
-            else
+
+            if (found == false)
             {
                 // Ampersand needs to be the first, otherwise it would
                 // double-escape other entities.
-                innerText += tokens[i].replace(new RegExp('&', 'g'), "&amp;")
-                                      .replace(new RegExp('<', 'g'), "&lt;")
-                                      .replace(new RegExp('>', 'g'), "&gt;");
+                innerText += XmlEscapeCharacters(tokens[i]);
             }
         }
 
@@ -316,3 +424,81 @@ function tokenize(text)
     return tokens;
 }
 
+function XmlEscapeCharacters(input)
+{
+    // Ampersand needs to be the first, otherwise it would
+    // double-escape other entities.
+    return input.replace(new RegExp('&', 'g'), "&amp;")
+                .replace(new RegExp('<', 'g'), "&lt;")
+                .replace(new RegExp('>', 'g'), "&gt;");
+}
+
+function XhtmlDefinitionListParser(reader)
+{
+    let self = this;
+
+    let _reader = reader;
+
+    self.parse = function()
+    {
+        let definition = new Array();
+
+        while (_reader.hasNext() == true)
+        {
+            let event = reader.nextEvent();
+
+            if (event instanceof StartElement)
+            {
+                let name = event.getName().getLocalPart().toLowerCase();
+
+                if (name == "dt" ||
+                    name == "dd")
+                {
+                    let textContent = HandleEntry(name);
+
+                    if (textContent.length > 0)
+                    {
+                        let entry = new Object();
+                        entry.name = name;
+                        entry.text = textContent;
+
+                        definition.push(entry);
+                    }
+                }
+            }
+            else if (event instanceof EndElement)
+            {
+                if (event.getName().getLocalPart().toLowerCase() == "dl")
+                {
+                    return definition;
+                }
+            }
+        }
+
+        throw "XhtmlDefinitionListParser: Definition List not well-formed.";
+    }
+
+    function HandleEntry(name)
+    {
+        let textContent = "";
+
+        while (_reader.hasNext() == true)
+        {
+            let event = reader.nextEvent();
+
+            if (event instanceof Characters)
+            {
+                textContent += event.getData();
+            }
+            else if (event instanceof EndElement)
+            {
+                if (event.getName().getLocalPart().toLowerCase() == name.toLowerCase())
+                {
+                    break;
+                }
+            }
+        }
+
+        return textContent;
+    }
+}
