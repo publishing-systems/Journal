@@ -31,6 +31,11 @@ function LoadJournal()
         {
             LoadGlossary(function() { loadStage += 1; LoadQueue(); });
         }
+        else if (loadStage == 3)
+        {
+            console.log("Loading stages completed.");
+            alert("Loading stages completed.");
+        }
     }
 
     LoadQueue();
