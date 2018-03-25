@@ -28,6 +28,7 @@ function LoadGlossary(callback)
 
     let page = 1;
     let site = 0;
+    let entryIndex = 0;
     let urls = [ "https://doug-50.info/journal" ];
 
     let LoadEntry = function(data)
@@ -58,7 +59,11 @@ function LoadGlossary(callback)
 
         if (data.categories.includes(12) == true)
         {
-            if (RenderEntry(data) != 0)
+            if (RenderEntry(data, entryIndex) == 0)
+            {
+                ++entryIndex;
+            }
+            else
             {
                 return;
             }
@@ -73,9 +78,9 @@ function LoadGlossary(callback)
 }
 
 
-function RenderEntry(entry)
+function RenderEntry(entry, index)
 {
-    let destination = document.getElementById('content');
+    let destination = document.getElementById('content-pane');
 
     if (destination == null)
     {
@@ -94,7 +99,7 @@ function RenderEntry(entry)
         destination.appendChild(parent);
 
         let header = document.createElement("h2");
-        let headerText = document.createTextNode("Glossary");
+        let headerText = document.createTextNode("Definitions");
         header.appendChild(headerText);
         parent.append(header);
     }
@@ -168,6 +173,7 @@ function RenderEntry(entry)
         for (let i = 0; i < glossary.length; i++)
         {
             let element = document.createElement(glossary[i].name);
+            element.setAttribute("class", "term-" + index);
             let textContent = document.createTextNode(XmlEscapeCharacters(glossary[i].text));
             element.appendChild(textContent);
             container.appendChild(element);
@@ -181,11 +187,13 @@ function RenderEntry(entry)
         }
 
         let term = document.createElement("dt");
+        term.setAttribute("class", "term-" + index);
         let termText = document.createTextNode(XmlEscapeCharacters(entry.title.rendered));
         term.appendChild(termText);
         container.appendChild(term);
 
         let description = document.createElement("dd");
+        description.setAttribute("class", "term-" + index);
         let descriptionText = document.createTextNode(glossary);
         description.appendChild(descriptionText);
         container.appendChild(description);
@@ -234,7 +242,9 @@ function ApplyGlossary()
                     entry.terms = new Array();
                 }
 
-                entry.terms.push(child.innerText.toLowerCase());
+                let termTokens = tokenize(child.innerText.toLowerCase());
+
+                entry.terms.push(termTokens);
             }
             else if (child.tagName.toLowerCase() == "dd")
             {
@@ -294,8 +304,13 @@ function ReplaceText(node, glossary)
             {
                 for (let k = 0; k < glossary[j].terms.length && found == false; k++)
                 {
-                    let termTokens = tokenize(glossary[j].terms[k]);
+                    let termTokens = glossary[j].terms[k];
                     let matched = true;
+
+                    if (tokens.length - i < termTokens.length)
+                    {
+                        continue;
+                    }
 
                     for (let l = 0; l < termTokens.length; l++)
                     {
@@ -322,6 +337,7 @@ function ReplaceText(node, glossary)
 
                         let span = document.createElement("span");
                         span.setAttribute("class", "glossary-usage");
+                        span.setAttribute("onclick", "showTerm('term-" + j + "');");
 
                         let textContent = "";
 
@@ -501,4 +517,72 @@ function XhtmlDefinitionListParser(reader)
 
         return textContent;
     }
+}
+
+function showTerm(id)
+{
+    hideTerm();
+
+    let definition = document.getElementsByClassName(id);
+
+    if (definition == null)
+    {
+        return -1;
+    }
+
+    if (definition.length <= 0)
+    {
+        return -1;
+    }
+
+    let parent = document.getElementById('glossary-pane');
+
+    if (parent == null)
+    {
+        return -1;
+    }
+
+    let destination = document.createElement("dl");
+    parent.appendChild(destination);
+
+    for (let i = 0; i < definition.length; i++)
+    {
+        let element = definition[i].cloneNode(true);
+        // Otherwise DOM would update definition.length as the nodes would
+        // be cloned with their class attribute, leading to an infinite loop.
+        element.removeAttribute("class");
+        destination.appendChild(element);
+    }
+
+    return 0;
+}
+
+function hideTerm()
+{
+    let parent = document.getElementById('glossary-pane');
+
+    if (parent == null)
+    {
+        return -1;
+    }
+
+    let glossary = parent.getElementsByTagName("dl");
+
+    // Stupid JavaScript has a cloneNode(deep), but no removeNode(deep).
+    let removeNode = function(element, parent)
+    {
+        while (element.hasChildNodes == true)
+        {
+            removeNode(element.lastChild, element);
+        }
+
+        parent.removeChild(element);
+    }
+
+    for (let i = 0; i < glossary.length; i++)
+    {
+        removeNode(glossary[i], parent);
+    }
+
+    return 0;
 }

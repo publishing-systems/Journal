@@ -89,7 +89,16 @@ function LoadPosts(callback)
 
 function RenderPost(post)
 {
-    let destination = document.getElementById('content');
+    // TODO: Limitation to a post category for demo purposes, to
+    // avoid extreme script execution time for glossary application
+    // on everything.
+    if (post.link.toLowerCase().indexOf("doug-50.info") < 0 ||
+        post.categories.includes(3) != true)
+    {
+        return 0;
+    }
+
+    let destination = document.getElementById('content-pane');
 
     if (destination == null)
     {

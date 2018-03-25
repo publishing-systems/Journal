@@ -23,15 +23,31 @@ body
 em
 {
     all: unset;
-    text-decoration: blink;
-    background-color: LightGray;
+    background-color: red;
 }
 
 strong
 {
     all: unset;
-    text-decoration: overline underline;
+    font-family: monospace;
     font-weight: bold;
+    color: orange;
+}
+
+#content-pane
+{
+    float: left;
+    width: 50%;
+    position: relative;
+}
+
+#glossary-pane
+{
+    right: 0;
+    width: 50%;
+    border-left: 2px solid black;
+    box-sizing: border-box;
+    position: fixed;
 }
 
 .post-content
@@ -42,5 +58,16 @@ strong
 
 .glossary-usage
 {
-    background-color: yellow;
+    color: #87CEEB;
+    font-style: italic;
+}
+
+dd
+{
+    text-align: justify;
+}
+
+#glossary
+{
+    display: none;
 }
