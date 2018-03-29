@@ -29,7 +29,7 @@ function LoadPosts(callback)
     let page = 1;
     let site = 0;
     let urls = [ "https://doug-50.info/journal",
-                 "https://skreutzer.de" ];
+                 "https://wordpress.liquid.info" ];
 
     let LoadPost = function(data)
     {
@@ -65,17 +65,18 @@ function LoadPosts(callback)
             render = false;
         }
 
-        if (urls[site] == "https://skreutzer.de" &&
-            data.categories.includes(3) != true)
-        {
-            render = false;
-        }
-
         if (render == true)
         {
-            if (RenderPost(data) != 0)
+            try
             {
-                return;
+                if (RenderPost(data) != 0)
+                {
+                    return;
+                }
+            }
+            catch (ex)
+            {
+                console.log("Can't render post '" + data.link + "'. Reason: " + ex);
             }
         }
 
@@ -162,15 +163,15 @@ function RenderPost(post)
     let innerHTML = "";
     let stream = new CharacterStream(post.content.rendered);
     let reader = createXMLEventReader(stream);
+    reader.addToEntityReplacementDictionary("#8211", "–");
+    reader.addToEntityReplacementDictionary("#8212", "—");
     reader.addToEntityReplacementDictionary("#8216", "‘");
     reader.addToEntityReplacementDictionary("#8217", "’");
     reader.addToEntityReplacementDictionary("#8220", "“");
     reader.addToEntityReplacementDictionary("#8221", "”");
+    reader.addToEntityReplacementDictionary("#8222", "„");
     reader.addToEntityReplacementDictionary("#8230", "…");
     reader.addToEntityReplacementDictionary("nbsp", " ");
-    reader.addToEntityReplacementDictionary("#8211", "–");
-    reader.addToEntityReplacementDictionary("#038", "&");
-    reader.addToEntityReplacementDictionary("#8222", "„");
 
     while (reader.hasNext() == true)
     {
@@ -185,7 +186,13 @@ function RenderPost(post)
                 name == "ul" ||
                 name == "ol" ||
                 name == "li" ||
-                name == "strong")
+                name == "strong" ||
+                name == "table" ||
+                name == "thead" ||
+                name == "th" ||
+                name == "tbody" ||
+                name == "tr" ||
+                name == "td")
             {
                 innerHTML += "<" + name + ">";
             }
@@ -214,6 +221,7 @@ function RenderPost(post)
                                                 .replace(new RegExp('"', 'g'), "&quot;")
                                                 .replace(new RegExp('<', 'g'), "lt;") + "\">";
 
+                // No other elements in link caption.
                 while (reader.hasNext() == true)
                 {
                     event = reader.nextEvent();
@@ -261,7 +269,13 @@ function RenderPost(post)
                 name == "ul" ||
                 name == "ol" ||
                 name == "li" ||
-                name == "strong")
+                name == "strong" ||
+                name == "table" ||
+                name == "thead" ||
+                name == "th" ||
+                name == "tbody" ||
+                name == "tr" ||
+                name == "td")
             {
                 innerHTML += "</" + name + ">";
             }

@@ -116,20 +116,17 @@ function RenderEntry(entry, index)
         container = container[0];
     }
 
-    // TODO: Remove workaround for https://github.com/mediaelement/mediaelement/pull/2498.
-    entry.content.rendered = entry.content.rendered.replace(new RegExp("allowfullscreen", 'g'), "allowfullscreen=\"true\"");
-
     let stream = new CharacterStream(entry.content.rendered);
     let reader = createXMLEventReader(stream);
+    reader.addToEntityReplacementDictionary("#8211", "–");
+    reader.addToEntityReplacementDictionary("#8212", "—");
     reader.addToEntityReplacementDictionary("#8216", "‘");
     reader.addToEntityReplacementDictionary("#8217", "’");
     reader.addToEntityReplacementDictionary("#8220", "“");
     reader.addToEntityReplacementDictionary("#8221", "”");
+    reader.addToEntityReplacementDictionary("#8222", "„");
     reader.addToEntityReplacementDictionary("#8230", "…");
     reader.addToEntityReplacementDictionary("nbsp", " ");
-    reader.addToEntityReplacementDictionary("#8211", "–");
-    reader.addToEntityReplacementDictionary("#038", "&");
-    reader.addToEntityReplacementDictionary("#8222", "„");
 
     let glossary = "";
 
