@@ -17,8 +17,20 @@
 
 "use strict";
 
-function LoadGlossary(callback)
+function LoadGlossary(urls, callback)
 {
+    if (Array.isArray(urls) != true)
+    {
+        console.log("Parameter 'urls' is not an array.");
+        return;
+    }
+
+    if (urls.length <= 0)
+    {
+        console.log("No glossary URL specified.");
+        return;
+    }
+
     let connection = AJAX.GetConnection();
 
     if (connection == null)
@@ -29,7 +41,6 @@ function LoadGlossary(callback)
     let page = 1;
     let site = 0;
     let entryIndex = 0;
-    let urls = [ "https://doug-50.info/journal" ];
 
     let LoadEntry = function(data)
     {
@@ -115,6 +126,9 @@ function RenderEntry(entry, index)
     {
         container = container[0];
     }
+
+    // TODO: Remove workaround for https://github.com/mediaelement/mediaelement/pull/2498.
+    entry.content.rendered = entry.content.rendered.replace(new RegExp("allowfullscreen", 'g'), "allowfullscreen=\"true\"");
 
     let stream = new CharacterStream(entry.content.rendered);
     let reader = createXMLEventReader(stream);

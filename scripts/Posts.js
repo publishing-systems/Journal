@@ -17,8 +17,20 @@
 
 "use strict";
 
-function LoadPosts(callback)
+function LoadPosts(urls, callback)
 {
+    if (Array.isArray(urls) != true)
+    {
+        console.log("Parameter 'urls' is not an array.");
+        return;
+    }
+
+    if (urls.length <= 0)
+    {
+        console.log("No posts URL specified.");
+        return;
+    }
+
     let connection = AJAX.GetConnection();
 
     if (connection == null)
@@ -28,8 +40,6 @@ function LoadPosts(callback)
 
     let page = 1;
     let site = 0;
-    let urls = [ "https://doug-50.info/journal",
-                 "https://wordpress.liquid.info" ];
 
     let LoadPost = function(data)
     {
@@ -159,6 +169,9 @@ function RenderPost(post)
 
     let content = document.createElement("div");
     content.setAttribute("class", "post-content");
+
+    // TODO: Remove workaround for https://github.com/mediaelement/mediaelement/pull/2498.
+    post.content.rendered = post.content.rendered.replace(new RegExp("allowfullscreen", 'g'), "allowfullscreen=\"true\"");
 
     let innerHTML = "";
     let stream = new CharacterStream(post.content.rendered);

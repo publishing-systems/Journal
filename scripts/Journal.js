@@ -25,11 +25,11 @@ function LoadJournal()
     {
         if (loadStage == 1)
         {
-            LoadPosts(function() { loadStage += 1; LoadQueue(); });
+            LoadPosts(["https://doug-50.info/journal"], function() { loadStage += 1; LoadQueue(); });
         }
         else if (loadStage == 2)
         {
-            LoadGlossary(function() { loadStage += 1; LoadQueue(); });
+            LoadGlossary(["https://doug-50.info/journal"], function() { loadStage += 1; LoadQueue(); });
         }
         else if (loadStage == 3)
         {
